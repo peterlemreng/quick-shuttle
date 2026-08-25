@@ -1,0 +1,11 @@
+node_modules/
+website/node_modules/
+backend/node_modules/
+mobile/node_modules/
+.env
+website/.env
+backend/.env
+mobile/.env
+dist/
+website/dist/
+*.log
