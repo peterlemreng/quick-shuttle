@@ -48,6 +48,12 @@ app.post('/api/bookings', (req, res) => {
     });
   }
 
+  if (from === to) {
+    return res.status(400).json({
+      error: 'From and To cannot be the same.'
+    });
+  }
+
   const fare = fares[`${from}|${to}`];
 
   if (fare === undefined) {
@@ -58,9 +64,9 @@ app.post('/api/bookings', (req, res) => {
 
   const count = Number(passengers);
 
-  if (!Number.isInteger(count) || count < 1) {
+  if (!Number.isInteger(count) || count < 1 || count > 20) {
     return res.status(400).json({
-      error: 'Passengers must be at least 1.'
+      error: 'Passengers must be between 1 and 20.'
     });
   }
 
@@ -78,6 +84,70 @@ app.post('/api/bookings', (req, res) => {
     serviceFee: SERVICE_FEE,
     total: (fare + SERVICE_FEE) * count,
     status: 'CONFIRMED',
+    bookingSource: 'CUSTOMER',
+    createdAt: new Date().toISOString()
+  };
+
+  bookings.push(booking);
+
+  res.status(201).json(booking);
+});
+
+app.post('/api/customer-care/bookings', (req, res) => {
+  const {
+    mainTown,
+    from,
+    to,
+    date,
+    time,
+    passengerName,
+    phone,
+    passengers,
+    fare
+  } = req.body;
+
+  if (!mainTown || !from || !to || !date || !time || !passengerName || !phone || !passengers || fare === undefined) {
+    return res.status(400).json({
+      error: 'Please complete all booking fields including fare.'
+    });
+  }
+
+  if (from === to) {
+    return res.status(400).json({
+      error: 'From and To cannot be the same.'
+    });
+  }
+
+  const count = Number(passengers);
+  const enteredFare = Number(fare);
+
+  if (!Number.isInteger(count) || count < 1 || count > 20) {
+    return res.status(400).json({
+      error: 'Passengers must be between 1 and 20.'
+    });
+  }
+
+  if (!Number.isFinite(enteredFare) || enteredFare < 0) {
+    return res.status(400).json({
+      error: 'Fare must be a valid amount.'
+    });
+  }
+
+  const booking = {
+    bookingNo: `QS-${String(bookings.length + 1).padStart(5, '0')}`,
+    mainTown,
+    from,
+    to,
+    date,
+    time,
+    passengerName,
+    phone,
+    passengers: count,
+    fare: enteredFare,
+    serviceFee: SERVICE_FEE,
+    total: (enteredFare + SERVICE_FEE) * count,
+    status: 'CONFIRMED',
+    bookingSource: 'CUSTOMER_CARE',
     createdAt: new Date().toISOString()
   };
 
