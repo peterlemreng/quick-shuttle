@@ -83,7 +83,8 @@ app.post('/api/bookings', (req, res) => {
     fare,
     serviceFee: SERVICE_FEE,
     total: (fare + SERVICE_FEE) * count,
-    status: 'CONFIRMED',
+    status: 'PENDING_PAYMENT',
+    paymentStatus: 'UNPAID',
     bookingSource: 'CUSTOMER',
     createdAt: new Date().toISOString()
   };
@@ -163,3 +164,4 @@ app.get('/api/bookings', (req, res) => {
 app.listen(4000, () => {
   console.log('Quick Shuttle API: http://localhost:4000');
 });
+
