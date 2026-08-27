@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import {
-  SafeAreaView,
   ScrollView,
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 
-const API_URL = 'http://localhost:4000';
+const API_URL = 'http://192.168.100.15:4000';
 const SERVICE_FEE = 70;
 
 const towns = [
@@ -36,7 +36,7 @@ const towns = [
   'Busia',
 ];
 
-export default function App() {
+function AppContent() {
   const [from, setFrom] = useState('Kakamega');
   const [to, setTo] = useState('Kitale');
   const [fare, setFare] = useState(null);
@@ -497,3 +497,13 @@ const s = StyleSheet.create({
     fontWeight: '800',
   },
 });
+
+
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AppContent />
+    </SafeAreaProvider>
+  );
+}
