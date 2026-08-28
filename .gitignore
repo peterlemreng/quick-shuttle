@@ -9,3 +9,4 @@ mobile/.env
 dist/
 website/dist/
 *.log
+mobile/.expo/
