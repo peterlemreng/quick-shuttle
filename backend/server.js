@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-
+const { stkPush } = require('./mpesa');
 const app = express();
 
 app.use(cors());
@@ -29,7 +29,105 @@ app.get('/api/fare', (req, res) => {
     serviceFee: SERVICE_FEE
   });
 });
+app.post('/api/payments/stkpush', async (req, res) => {
+  try {
+    const { bookingNo } = req.body;
 
+    if (!bookingNo) {
+      return res.status(400).json({
+        error: 'Booking number is required.'
+      });
+    }
+
+    const booking = bookings.find(
+      (item) => item.bookingNo === bookingNo
+    );
+
+    if (!booking) {
+      return res.status(404).json({
+        error: 'Booking not found.'
+      });
+    }
+
+    if (booking.paymentStatus === 'PAID') {
+      return res.status(400).json({
+        error: 'This booking has already been paid.'
+      });
+    }
+
+    const result = await stkPush({
+      phone: booking.phone,
+      amount: booking.total,
+      bookingNo: booking.bookingNo
+    });
+
+    booking.checkoutRequestID = result.CheckoutRequestID || null;
+    booking.merchantRequestID = result.MerchantRequestID || null;
+    booking.paymentStatus = 'PENDING';
+
+    res.json({
+      success: true,
+      message: result.CustomerMessage || 'STK Push sent.',
+      bookingNo: booking.bookingNo,
+      total: booking.total,
+      checkoutRequestID: booking.checkoutRequestID
+    });
+
+  } catch (error) {
+    console.error(
+      'M-Pesa STK Push Error:',
+      error.response?.data || error.message
+    );
+
+    res.status(500).json({
+      error: 'Failed to initiate M-Pesa payment.',
+      details: error.response?.data || error.message
+    });
+  }
+});
+app.post('/api/mpesa/callback', (req, res) => {
+  console.log('M-Pesa Callback Received:');
+  console.log(JSON.stringify(req.body, null, 2));
+
+  const callback = req.body?.Body?.stkCallback;
+
+  if (!callback) {
+    return res.status(400).json({
+      error: 'Invalid M-Pesa callback.'
+    });
+  }
+
+  const booking = bookings.find(
+    (item) => item.checkoutRequestID === callback.CheckoutRequestID
+  );
+
+  if (!booking) {
+    console.log('Booking not found for CheckoutRequestID:', callback.CheckoutRequestID);
+
+    return res.json({
+      ResultCode: 0,
+      ResultDesc: 'Callback received.'
+    });
+  }
+
+  if (callback.ResultCode === 0) {
+    booking.paymentStatus = 'PAID';
+    booking.status = 'CONFIRMED';
+
+    console.log(`Payment successful for ${booking.bookingNo}`);
+  } else {
+    booking.paymentStatus = 'FAILED';
+
+    console.log(
+      `Payment failed for ${booking.bookingNo}: ${callback.ResultDesc}`
+    );
+  }
+
+  res.json({
+    ResultCode: 0,
+    ResultDesc: 'Callback processed successfully.'
+  });
+});
 app.post('/api/bookings', (req, res) => {
   const {
     mainTown,
