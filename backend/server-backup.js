@@ -1,4 +1,3 @@
-require('dotenv').config({ path: __dirname + '/.env' });
 const express = require('express');
 const cors = require('cors');
 const { stkPush } = require('./mpesa');
@@ -85,49 +84,6 @@ app.post('/api/payments/stkpush', async (req, res) => {
       details: error.response?.data || error.message
     });
   }
-});
-app.post('/api/mpesa/callback', (req, res) => {
-  console.log('M-Pesa Callback Received:');
-  console.log(JSON.stringify(req.body, null, 2));
-
-  const callback = req.body?.Body?.stkCallback;
-
-  if (!callback) {
-    return res.status(400).json({
-      error: 'Invalid M-Pesa callback.'
-    });
-  }
-
-  const booking = bookings.find(
-    (item) => item.checkoutRequestID === callback.CheckoutRequestID
-  );
-
-  if (!booking) {
-    console.log('Booking not found for CheckoutRequestID:', callback.CheckoutRequestID);
-
-    return res.json({
-      ResultCode: 0,
-      ResultDesc: 'Callback received.'
-    });
-  }
-
-  if (callback.ResultCode === 0) {
-    booking.paymentStatus = 'PAID';
-    booking.status = 'CONFIRMED';
-
-    console.log(`Payment successful for ${booking.bookingNo}`);
-  } else {
-    booking.paymentStatus = 'FAILED';
-
-    console.log(
-      `Payment failed for ${booking.bookingNo}: ${callback.ResultDesc}`
-    );
-  }
-
-  res.json({
-    ResultCode: 0,
-    ResultDesc: 'Callback processed successfully.'
-  });
 });
 app.post('/api/bookings', (req, res) => {
   const {
