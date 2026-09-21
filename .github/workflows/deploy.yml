@@ -1,4 +1,4 @@
-name: Deploy Quick Shuttle Website
+ name: Deploy Quick Shuttle Website
 
 on:
   push:
@@ -47,12 +47,11 @@ jobs:
           path: website/dist
 
   deploy:
-    runs-on: ubuntu-24.04
-    needs: build
-
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-24.04
+    needs: build
 
     steps:
       - name: Deploy to GitHub Pages
