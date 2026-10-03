@@ -1,4 +1,4 @@
-﻿require('dotenv').config({ path: __dirname + '/.env' });
+require('dotenv').config({ path: __dirname + '/.env' });
 
 const express = require('express');
 const cors = require('cors');
@@ -17,6 +17,13 @@ app.use(express.json());
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 100,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false
+});
+
+const paymentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
   standardHeaders: 'draft-8',
   legacyHeaders: false
 });
@@ -522,7 +529,7 @@ app.get('/api/bookings', async (req, res) => {
   }
 });
 
-app.post('/api/payments/stkpush', body('bookingNo').trim().matches(/^QS-\d{5}$/), async (req, res) => {
+app.post('/api/payments/stkpush', paymentLimiter, body('bookingNo').trim().matches(/^QS-\d{5}$/), async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -729,6 +736,8 @@ app.post('/api/mpesa/callback', async (req, res) => {
 app.listen(4000, () => {
   console.log('Quick Shuttle API: http://localhost:4000');
 });
+
+
 
 
 
