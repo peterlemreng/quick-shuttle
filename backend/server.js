@@ -1,4 +1,4 @@
-require('dotenv').config({ path: __dirname + '/.env' });
+﻿require('dotenv').config({ path: __dirname + '/.env' });
 
 const express = require('express');
 const cors = require('cors');
@@ -114,6 +114,24 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+
+app.get('/api/routes', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT t1.name AS fromTown, t2.name AS toTown FROM routes r INNER JOIN towns t1 ON r.from_town_id = t1.id INNER JOIN towns t2 ON r.to_town_id = t2.id WHERE r.active = TRUE ORDER BY t1.name, t2.name"
+    );
+
+    res.json({
+      routes: rows
+    });
+  } catch (error) {
+    console.error('Routes lookup error:', error.message);
+
+    res.status(500).json({
+      error: 'Failed to retrieve routes.'
+    });
+  }
+});
 app.get('/api/fare', async (req, res) => {
   try {
     const { from, to } = req.query;
@@ -736,6 +754,7 @@ app.post('/api/mpesa/callback', async (req, res) => {
 app.listen(4000, () => {
   console.log('Quick Shuttle API: http://localhost:4000');
 });
+
 
 
 
