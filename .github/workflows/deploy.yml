@@ -1,4 +1,4 @@
- name: Deploy Quick Shuttle Website
+name: Deploy Quick Shuttle Website
 
 on:
   push:
